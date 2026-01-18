@@ -1,0 +1,19 @@
+name: Trigger Pentagon Pizza Index
+
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Every 2 hours
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Function
+        run: |
+          if [ -z "${{ secrets.VERCEL_URL }}" ]; then
+            echo "Error: VERCEL_URL secret is not set."
+            exit 1
+          fi
+          echo "Triggering Vercel function..."
+          curl -s -o /dev/null -w "%{http_code}" "${{ secrets.VERCEL_URL }}/api/index?key=${{ secrets.CRON_SECRET }}"
