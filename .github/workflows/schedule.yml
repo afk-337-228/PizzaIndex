@@ -2,7 +2,7 @@ name: Trigger Pentagon Pizza Index
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Every 2 hours
+    - cron: '*/30 * * * *' # Every 30 minutes
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
@@ -17,3 +17,4 @@ jobs:
           fi
           echo "Triggering Vercel function..."
           curl -s -o /dev/null -w "%{http_code}" "${{ secrets.VERCEL_URL }}/api/index?key=${{ secrets.CRON_SECRET }}"
+
