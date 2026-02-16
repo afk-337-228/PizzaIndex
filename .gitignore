@@ -1,0 +1,20 @@
+# Secrets and env
+.env
+.env.local
+.env.*.local
+.env.*
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.log
