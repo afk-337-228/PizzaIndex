@@ -1,8 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 import os
-import json
 import requests
-import time
 
 # Configuration
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -22,11 +20,16 @@ def fetch_pizzint_data():
         if response.status_code != 200:
             print(f"Error fetching data from Pizzint: Status {response.status_code}")
             return None
-        
+
         data = response.json()
         overall_index = data.get("overall_index", 0)
         defcon_level = data.get("defcon_level", 4)
-        
+
+        if not isinstance(overall_index, (int, float)):
+            overall_index = 0
+        if not isinstance(defcon_level, int) or defcon_level not in range(1, 6):
+            defcon_level = 4
+
         return {
             "index": overall_index,
             "doughcon": defcon_level
@@ -34,6 +37,12 @@ def fetch_pizzint_data():
     except Exception as e:
         print(f"Exception fetching data: {e}")
         return None
+
+
+def format_index(idx):
+    if idx == 0:
+        return "0 (index is zero, because pizza places are closed)"
+    return str(idx)
 
 def send_telegram_message(message):
     if IS_TEST_MODE:
@@ -65,7 +74,7 @@ class handler(BaseHTTPRequestHandler):
         query_params = parse_qs(parsed_path.query)
         key = query_params.get('key', [None])[0]
         
-        if not IS_TEST_MODE and key != CRON_SECRET:
+        if not IS_TEST_MODE and (not CRON_SECRET or key != CRON_SECRET):
             self.send_response(401)
             self.end_headers()
             self.wfile.write("Unauthorized".encode('utf-8'))
@@ -91,12 +100,7 @@ class handler(BaseHTTPRequestHandler):
             
             status = mapping.get(defcon, {"emoji": "⚪", "text": "Unknown Status"})
             
-            if idx == 0:
-                idx_display = "0 (index is zero, because pizza places are closed)"
-            else:
-                idx_display = f"{idx}"
-
-            message = f"🍕 *Pentagon Pizza Index*: {idx_display}\n"
+            message = f"🍕 *Pentagon Pizza Index*: {format_index(idx)}\n"
             message += f"📊 *Status*: Level {defcon} — {status['emoji']} {status['text']}"
 
         send_telegram_message(message)
@@ -113,8 +117,7 @@ if __name__ == "__main__":
     if res:
         print(f"Index: {res['index']}, Level: {res['doughcon']}")
         
-        idx_test = f"{res['index']}" if res['index'] > 0 else "0 (index is zero, because pizza places are closed)"
-        msg = f"🍕 *Pentagon Pizza Index*: {idx_test}\n📊 *Status*: Level {res['doughcon']}"
+        msg = f"🍕 *Pentagon Pizza Index*: {format_index(res['index'])}\n📊 *Status*: Level {res['doughcon']}"
         send_telegram_message(msg)
     else:
         print("Failed to fetch data.")
