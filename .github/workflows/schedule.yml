@@ -19,7 +19,9 @@ jobs:
             echo "Error: CRON_SECRET secret is not set."
             exit 1
           fi
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.VERCEL_URL }}/api/index?key=${{ secrets.CRON_SECRET }}")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.VERCEL_URL }}/api/index")
           echo "HTTP Status: $HTTP_STATUS"
           if [ "$HTTP_STATUS" != "200" ]; then
             echo "Error: Vercel function returned status $HTTP_STATUS"

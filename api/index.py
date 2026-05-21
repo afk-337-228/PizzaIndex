@@ -69,11 +69,9 @@ def send_telegram_message(message):
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # Security Check
-        from urllib.parse import urlparse, parse_qs
-        parsed_path = urlparse(self.path)
-        query_params = parse_qs(parsed_path.query)
-        key = query_params.get('key', [None])[0]
-        
+        auth_header = self.headers.get('Authorization', '')
+        key = auth_header[len('Bearer '):] if auth_header.startswith('Bearer ') else None
+
         if not IS_TEST_MODE and (not CRON_SECRET or key != CRON_SECRET):
             self.send_response(401)
             self.end_headers()
